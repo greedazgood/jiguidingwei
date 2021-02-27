@@ -52,7 +52,7 @@ class Events
        //16进制数据
        $hex_data = bin2hex($data);
        $result1 = substr($hex_data,0,60);
-       $result2 = substr($hex_data,25,60);
+       $result2 = substr($hex_data,25,36);
        var_dump($result1);
        var_dump($result2);
         // 向所有人发送
