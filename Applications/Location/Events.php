@@ -23,7 +23,7 @@ use \GatewayWorker\Lib\Gateway;
 use GuzzleHttp\Client;
 use Workerman\Lib\Timer;
 
-require_once __DIR__. '../../config.php';
+require_once __DIR__. '/../../config.php';
 
 /**
  * 主逻辑
