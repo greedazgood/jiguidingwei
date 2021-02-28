@@ -61,8 +61,8 @@ class Events
              echo $position_hex.PHP_EOL;
              $front_data = substr($position_hex,0,4);
              $end_data = substr($position_hex,4,2);
-             $front_bin = hex2bin($front_data);
-             $end_bin = hex2bin($end_data);
+             $front_bin = base_convert($front_data,16,2);
+             $end_bin = base_convert($end_data,16,2);
              $triger_id = bindec(substr($front_bin,0,13));
              $wire_id = bindec(substr($front_bin,13,3));
              echo "天线编号:".$wire_id.PHP_EOL;
