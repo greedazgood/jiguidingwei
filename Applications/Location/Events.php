@@ -107,7 +107,7 @@ class Events
                     'json'=>$result
                 ]);
                 $myfile = fopen(__DIR__."/../../guzzle.log", 'ab');
-                fwrite($myfile,json_encode($result,true).PHP_EOL);
+                fwrite($myfile,json_encode($result,JSON_UNESCAPED_UNICODE).PHP_EOL);
                 //var_dump(json_decode($response->getBody()->getContents(), true));
             }
         }catch (\Throwable $throwable){
