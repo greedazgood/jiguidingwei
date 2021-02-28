@@ -95,7 +95,11 @@ class Events
              //echo "Location".($i+1).":".$data.PHP_EOL;
         }
         $time = substr($hex_data,62,6);
-        echo "time:".$time.PHP_EOL;
+        $hour = hexdec(substr($time,0,2));
+        $minute = hexdec(substr($time,2,2));
+        $second = hexdec(substr($time,4,2));
+        $new_time = strtotime($hour.":".$minute.":".$second);
+        echo "time:".$new_time.PHP_EOL;
         // 向所有人发送
         //Gateway::sendToAll("$client_id said $message\r\n");
    }
