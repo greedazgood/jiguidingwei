@@ -54,10 +54,12 @@ class Events
        $all_info = substr($hex_data,0,68);
        var_dump($all_info);
        $position_info = substr($hex_data,24,36);
-        for ($i=0 ;$i<5;$i++){
+       $uid = substr($hex_data,14,8);
+       echo "uid:".hexdec($uid).PHP_EOL;
+        for ($i=0 ;$i<6;$i++){
              $sixteen = substr($position_info,$i*6,6);
              $data = substr($sixteen,0,6);
-             echo "Location".($i+1).$data;
+             echo "Location".($i+1).":".$data.PHP_EOL;
         }
         $time = substr($hex_data,62,6);
         echo "time:".$time.PHP_EOL;
