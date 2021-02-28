@@ -92,7 +92,7 @@ class Events
                 'lfUid6' => $data[5]['trigger_id'],
                 'rss6' => $data[5]['rss'],
             ];
-            $config = require('../../config.php');
+            $config = require(__DIR__.'/../../config.php');
             $time_interval =$config['interval'];
             $url = $config['url'];
             $client = new Client();
