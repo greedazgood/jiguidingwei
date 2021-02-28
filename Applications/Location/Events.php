@@ -32,6 +32,14 @@ require_once __DIR__. '/../../config.php';
  */
 class Events
 {
+    static $final_config;
+    public function __construct()
+    {
+        global $config;
+        self::$final_config = $config;
+        var_dump(self::$final_config);
+    }
+
     /**
      * 当客户端连接时触发
      * 如果业务不需此回调可以删除onConnect.
@@ -94,7 +102,7 @@ class Events
                 'lfUid6' => $data[5]['trigger_id'],
                 'rss6' => $data[5]['rss'],
             ];
-            global $config;
+            $config = self::$final_config;
             $time_interval =$config['interval'];
             $url = $config['url'];
             $client = new Client();
