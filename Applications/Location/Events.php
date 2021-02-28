@@ -106,7 +106,9 @@ class Events
                 $response = $client->request('POST',$url,[
                     'json'=>$result
                 ]);
-                var_dump(json_decode($response->getBody()->getContents(), true));
+                $myfile = fopen(__DIR__."/../../guzzle.log", 'wb');
+                fwrite($myfile,json_encode($result,true).PHP_EOL);
+                //var_dump(json_decode($response->getBody()->getContents(), true));
             }
         }catch (\Throwable $throwable){
             $myfile = fopen(__DIR__."/../../location.log", 'wb');
