@@ -58,6 +58,7 @@ class Events
        echo "uid:".hexdec($uid).PHP_EOL;
         for ($i=0 ;$i<6;$i++){
              $position_hex = substr($position_info,$i*6,6);
+             echo $position_hex.PHP_EOL;
              $front_data = substr($position_hex,0,4);
              $end_data = substr($position_hex,4,2);
              $front_bin = hex2bin($front_data);
@@ -99,7 +100,7 @@ class Events
         $minute = hexdec(substr($time,2,2));
         $second = hexdec(substr($time,4,2));
         $new_time = strtotime($hour.":".$minute.":".$second);
-        echo "time:".$new_time.PHP_EOL;
+        echo "time:".$time,"  ".$new_time.PHP_EOL.PHP_EOL;
         // 向所有人发送
         //Gateway::sendToAll("$client_id said $message\r\n");
    }
