@@ -109,7 +109,7 @@ class Events
                 var_dump(json_decode($response->getBody()->getContents(), true));
             }
         }catch (\Throwable $throwable){
-            $myfile = fopen("../../location.log", "w") or die("Unable to open file!");
+            $myfile = fopen(__DIR__."/../../location.log", 'wb');
             fwrite($myfile,$throwable->getTraceAsString().PHP_EOL);
         }
     }
