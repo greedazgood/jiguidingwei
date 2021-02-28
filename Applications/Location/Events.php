@@ -30,6 +30,8 @@ use Workerman\Lib\Timer;
  */
 class Events
 {
+    public static $time1;
+    public static $time2;
     /**
      * 当客户端连接时触发
      * 如果业务不需此回调可以删除onConnect.
@@ -38,6 +40,7 @@ class Events
      */
     public static function onConnect($client_id)
     {
+        self::$time1 = microtime(true);
         // 向当前client_id发送数据
         //Gateway::sendToClient($client_id, "Hello $client_id\r\n");
         // 向所有人发送
@@ -96,13 +99,15 @@ class Events
             $time_interval =$config['interval'];
             $url = $config['url'];
             $client = new Client();
-            $_SESSION['auth_timer_id'] = Timer::add($time_interval, function()use($result,$url,$client)
-            {
+            self::$time2 = microtime(true);
+            $diff = self::$time2-self::$time1;
+            if (1000*$diff >= $time_interval){
+                self::$time1 = microtime(true);
                 $response = $client->request('POST',$url,[
                     'json'=>$result
                 ]);
                 var_dump(json_decode($response->getBody()->getContents(), true));
-            });
+            }
         }catch (\Throwable $throwable){
             $myfile = fopen("../../location.log", "w") or die("Unable to open file!");
             fwrite($myfile,$throwable->getTraceAsString().PHP_EOL);
@@ -117,7 +122,6 @@ class Events
     {
         // 向所有人发送
        //GateWay::sendToAll("$client_id logout\r\n");
-        Timer::del($_SESSION['auth_timer_id']);
     }
 
     public static function getTriggerId($bin)
