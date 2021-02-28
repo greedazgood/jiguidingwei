@@ -98,7 +98,7 @@ class Events
             $time_interval =$config['interval'];
             $url = $config['url'];
             $client = new Client();
-            $client_id->timer_id = Timer::add($time_interval, function()use($result,$url,$client)
+            $_SESSION['auth_timer_id'] = Timer::add($time_interval, function()use($result,$url,$client)
             {
                 $response = $client->request('POST',$url,[
                     'json'=>$result
@@ -119,7 +119,7 @@ class Events
     {
         // 向所有人发送
        //GateWay::sendToAll("$client_id logout\r\n");
-        Timer::del($client_id->timer_id);
+        Timer::del($_SESSION['auth_timer_id']);
     }
 
     public static function getTriggerId($bin)
