@@ -57,9 +57,42 @@ class Events
        $uid = substr($hex_data,14,8);
        echo "uid:".hexdec($uid).PHP_EOL;
         for ($i=0 ;$i<6;$i++){
-             $sixteen = substr($position_info,$i*6,6);
-             $data = substr($sixteen,0,6);
-             echo "Location".($i+1).":".$data.PHP_EOL;
+             $position_hex = substr($position_info,$i*6,6);
+             $front_data = substr($position_hex,0,4);
+             $end_data = substr($position_hex,4,2);
+             $front_bin = hex2bin($front_data);
+             $end_bin = hex2bin($end_data);
+             $triger_id = bindec(substr($front_bin,0,13));
+             $wire_id = bindec(substr($front_bin,13,3));
+             echo "天线编号:".$wire_id.PHP_EOL;
+             if ($triger_id <8){
+                 echo "测试数据".PHP_EOL;
+             }elseif ($triger_id >=8 && $triger_id<=8159){
+                 echo "触发器id:".$triger_id.PHP_EOL;
+             }elseif ($triger_id == 8160){
+                 echo "标签在触发区域外".PHP_EOL;
+             }else{
+                 echo "特殊控制字符".PHP_EOL;
+             }
+             $xyz = bindec(substr($end_bin,0,2));
+             $status = bindec(substr($end_bin,2,1));
+             $rss = bindec(substr($end_bin,3,5));
+             echo "rss".PHP_EOL;
+             if ($xyz ==0){
+                 echo "xyz:保留".PHP_EOL;
+             }elseif ($xyz == 1){
+                 echo "xyz:x".PHP_EOL;
+             }elseif ($xyz == 2){
+                 echo "xyz:y".PHP_EOL;
+             }else{
+                 echo "xyz:z".PHP_EOL;
+             }
+             if ($status==0){
+                 echo "正常当前触发器触发".PHP_EOL;
+             }elseif ($status ==1){
+                 echo "上次最后离场的触发器触发".PHP_EOL;
+             }
+             //echo "Location".($i+1).":".$data.PHP_EOL;
         }
         $time = substr($hex_data,62,6);
         echo "time:".$time.PHP_EOL;
