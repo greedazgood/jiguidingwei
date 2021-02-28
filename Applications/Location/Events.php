@@ -23,7 +23,7 @@ use \GatewayWorker\Lib\Gateway;
 use GuzzleHttp\Client;
 use Workerman\Lib\Timer;
 
-require '../../config.php';
+require_once __DIR__. '../../config.php';
 
 /**
  * 主逻辑
@@ -99,7 +99,7 @@ class Events
             $client = new Client();
             $client_id->timer_id = Timer::add($time_interval, function()use($result,$url,$client)
             {
-                $client->request('POST',$url,[
+                $response = $client->request('POST',$url,[
                     'json'=>$result
                 ]);
             });
