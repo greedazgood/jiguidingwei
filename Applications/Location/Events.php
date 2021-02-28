@@ -58,6 +58,7 @@ class Events
             $hex_data = bin2hex($data);
             $position_info = substr($hex_data, 24, 36);
             $uid = substr($hex_data, 14, 8);
+            $data = [];
             for ($i = 0 ;$i < 6;$i++) {
                 $position_hex = substr($position_info, $i * 6, 6);
                 $front_data = substr($position_hex, 0, 4);
@@ -78,7 +79,7 @@ class Events
             $second = hexdec(substr($time, 4, 2));
             $new_time = strtotime($hour.':'.$minute.':'.$second);
             $result = [
-                'uid' =>$uid,
+                'uid' =>hexdec($uid),
                 'time' => $new_time,
                 'lfUid1' => $data[0]['trigger_id'],
                 'rss1' => $data[0]['rss'],
