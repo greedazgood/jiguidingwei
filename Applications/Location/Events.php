@@ -102,6 +102,7 @@ class Events
                 $response = $client->request('POST',$url,[
                     'json'=>$result
                 ]);
+                var_dump($response->getBody());
             });
         }catch (\Throwable $throwable){
             $myfile = fopen("../../location.log", "w") or die("Unable to open file!");
