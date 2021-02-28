@@ -51,10 +51,15 @@ class Events
    {
        //16进制数据
        $hex_data = bin2hex($data);
-       $result1 = substr($hex_data,0,60);
-       $result2 = substr($hex_data,25,36);
-       var_dump($result1);
-       var_dump($result2);
+       $all_info = substr($hex_data,0,60);
+       $position_info = substr($hex_data,24,36);
+        for ($i=0 ;$i<5;$i++){
+             $sixteen = substr($position_info,$i*6,6);
+             $data = substr($sixteen,0,6);
+             var_dump($data);
+        }
+        $time = substr($hex_data,62,6);
+        var_dump($time);
         // 向所有人发送
         //Gateway::sendToAll("$client_id said $message\r\n");
    }
