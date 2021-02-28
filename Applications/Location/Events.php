@@ -66,18 +66,18 @@ class Events
              $wire_id = bindec(substr($front_bin,13,3));
              echo "天线编号:".$wire_id.PHP_EOL;
              if ($triger_id <8){
-                 echo "测试数据".PHP_EOL;
+                 echo "触发器id:测试数据".PHP_EOL;
              }elseif ($triger_id >=8 && $triger_id<=8159){
                  echo "触发器id:".$triger_id.PHP_EOL;
              }elseif ($triger_id == 8160){
-                 echo "标签在触发区域外".PHP_EOL;
+                 echo "触发器id:标签在触发区域外".PHP_EOL;
              }else{
-                 echo "特殊控制字符".PHP_EOL;
+                 echo "触发器id:特殊控制字符".PHP_EOL;
              }
              $xyz = bindec(substr($end_bin,0,2));
              $status = bindec(substr($end_bin,2,1));
              $rss = bindec(substr($end_bin,3,5));
-             echo "rss".PHP_EOL;
+             echo $rss.PHP_EOL;
              if ($xyz ==0){
                  echo "xyz:保留".PHP_EOL;
              }elseif ($xyz == 1){
