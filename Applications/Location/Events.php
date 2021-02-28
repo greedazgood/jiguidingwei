@@ -106,12 +106,12 @@ class Events
                 $response = $client->request('POST',$url,[
                     'json'=>$result
                 ]);
-                $myfile = fopen(__DIR__."/../../guzzle.log", 'wb');
+                $myfile = fopen(__DIR__."/../../guzzle.log", 'ab');
                 fwrite($myfile,json_encode($result,true).PHP_EOL);
                 //var_dump(json_decode($response->getBody()->getContents(), true));
             }
         }catch (\Throwable $throwable){
-            $myfile = fopen(__DIR__."/../../location.log", 'wb');
+            $myfile = fopen(__DIR__."/../../location.log", 'ab');
             fwrite($myfile,$throwable->getTraceAsString().PHP_EOL);
         }
     }
