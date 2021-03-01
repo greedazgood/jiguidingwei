@@ -87,6 +87,24 @@ class Events
                 'lfUid2' => $data[1]['trigger_id'],
                 'rss2' => $data[1]['rss'],
                 'lfUid3' => $data[2]['trigger_id'],
+                'rss3' => $data[2]['rss']
+            ];
+            $info = [
+                'sys_time' => date('Y-m-d H:i:s'),
+                'addr' => $_SERVER['REMOTE_ADDR'].':'.$_SERVER['REMOTE_PORT'],
+                'uid' =>hexdec($uid),
+                'time' => $new_time,
+                'para1' => '',
+                'para2' => '',
+                'para3' => '',
+                'para4' => '',
+                'para5' => '',
+                'para6' => '',
+                'lfUid1' => $data[0]['trigger_id'],
+                'rss1' => $data[0]['rss'],
+                'lfUid2' => $data[1]['trigger_id'],
+                'rss2' => $data[1]['rss'],
+                'lfUid3' => $data[2]['trigger_id'],
                 'rss3' => $data[2]['rss'],
                 'lfUid4' => $data[3]['trigger_id'],
                 'rss4' => $data[3]['rss'],
@@ -95,6 +113,7 @@ class Events
                 'lfUid6' => $data[5]['trigger_id'],
                 'rss6' => $data[5]['rss'],
             ];
+            self::putCsv($info);
             $config = require(__DIR__.'/../../config.php');
             $time_interval =$config['interval'];
             $url = $config['url'];
@@ -107,9 +126,8 @@ class Events
                     'json'=>$result
                 ]);
                 $myfile = fopen(__DIR__."/../../guzzle.log", 'ab');
-                fwrite($myfile,json_encode($result,JSON_UNESCAPED_UNICODE).PHP_EOL);
+                fwrite($myfile,json_decode($response->getBody()->getContents(), true).PHP_EOL);
                 fclose($myfile);
-                //var_dump(json_decode($response->getBody()->getContents(), true));
             }
         }catch (\Throwable $throwable){
             $myfile = fopen(__DIR__."/../../location.log", 'ab');
