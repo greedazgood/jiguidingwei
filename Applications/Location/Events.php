@@ -108,11 +108,13 @@ class Events
                 ]);
                 $myfile = fopen(__DIR__."/../../guzzle.log", 'ab');
                 fwrite($myfile,json_encode($result,JSON_UNESCAPED_UNICODE).PHP_EOL);
+                fclose($myfile);
                 //var_dump(json_decode($response->getBody()->getContents(), true));
             }
         }catch (\Throwable $throwable){
             $myfile = fopen(__DIR__."/../../location.log", 'ab');
             fwrite($myfile,$throwable->getTraceAsString().PHP_EOL);
+            fclose($myfile);
         }
     }
 
@@ -162,5 +164,12 @@ class Events
         } elseif ($status == 1) {
             return '上次最后离场的触发器触发';
         }
+    }
+
+    public static function putCsv($data)
+    {
+        $fp = fopen(__DIR__.'/../../info.csv','ab');
+        fputcsv($fp,$data);
+        fclose($fp);
     }
 }
