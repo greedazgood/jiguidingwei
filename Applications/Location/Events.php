@@ -59,6 +59,14 @@ class Events
             $hex_data = bin2hex($data);
             $position_info = substr($hex_data, 24, 36);
             $uid = substr($hex_data, 14, 8);
+            $para1 = substr($hex_data,22,2);
+            $para1_bin = base_convert($para1,16,2);
+            $battery = $para1_bin[0];
+            $reset = $para1_bin[1];
+            $alert = $para1_bin[2];
+            $trap = $para1_bin[3];
+            $model = $para1_bin[4];
+            $vol = self::getVoltage($para1_bin);
             $data = [];
             for ($i = 0 ;$i < 6;$i++) {
                 $position_hex = substr($position_info, $i * 6, 6);
@@ -94,12 +102,12 @@ class Events
                 'addr' => $_SERVER['REMOTE_ADDR'].':'.$_SERVER['REMOTE_PORT'],
                 'uid' =>hexdec($uid),
                 'time' => $new_time,
-                'para1' => '',
-                'para2' => '',
-                'para3' => '',
-                'para4' => '',
-                'para5' => '',
-                'para6' => '',
+                'para1' => $battery,
+                'para2' => $reset,
+                'para3' => $alert,
+                'para4' => $trap,
+                'para5' => $model,
+                'para6' => $vol,
                 'lfUid1' => $data[0]['trigger_id'],
                 'rss1' => $data[0]['rss'],
                 'lfUid2' => $data[1]['trigger_id'],
@@ -181,6 +189,19 @@ class Events
             return '正常当前触发器触发';
         } elseif ($status == 1) {
             return '上次最后离场的触发器触发';
+        }
+    }
+
+    public static function getVoltage($bin)
+    {
+        $vol = bindec(substr($bin,5,3));
+        $status = [
+            '2.00~2.09','2.10~2.19','2.20~2.29','2.30~2.39','2.40~2.49','2.50~2.59','2.60~2.69','2.70~2.79'
+        ];
+        if (array_key_exists($vol,$status)){
+            return $status[$vol];
+        }else{
+            return '范围外电压';
         }
     }
 
