@@ -60,7 +60,7 @@ class Events
             $position_info = substr($hex_data, 24, 36);
             $uid = substr($hex_data, 14, 8);
             $para1 = substr($hex_data,22,2);
-            $para1_bin = base_convert($para1,16,2);
+            $para1_bin = str_pad(base_convert($para1,16,2),8,'0',STR_PAD_LEFT);
             $battery = $para1_bin[0];
             $reset = $para1_bin[1];
             $alert = $para1_bin[2];
