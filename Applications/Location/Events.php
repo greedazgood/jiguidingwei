@@ -19,9 +19,8 @@
  */
 //declare(ticks=1);
 
-use \GatewayWorker\Lib\Gateway;
 use GuzzleHttp\Client;
-use Workerman\Lib\Timer;
+use \GatewayWorker\Lib\Gateway;
 
 /**
  * 主逻辑
@@ -32,6 +31,7 @@ class Events
 {
     public static $time1;
     public static $time2;
+
     /**
      * 当客户端连接时触发
      * 如果业务不需此回调可以删除onConnect.
@@ -55,26 +55,26 @@ class Events
     public static function onMessage($client_id, $data)
     {
         //16进制数据
-        try{
+        try {
             $hex_data = bin2hex($data);
             $position_info = substr($hex_data, 24, 36);
             $uid = substr($hex_data, 14, 8);
-            $para1 = substr($hex_data,22,2);
-            $para1_bin = str_pad(base_convert($para1,16,2),8,'0',STR_PAD_LEFT);
+            $para1 = substr($hex_data, 22, 2);
+            $para1_bin = str_pad(base_convert($para1, 16, 2), 8, '0', STR_PAD_LEFT);
             $battery = $para1_bin[0];
             $reset = $para1_bin[1];
             $alert = $para1_bin[2];
             $trap = $para1_bin[3];
             $model = $para1_bin[4];
             $vol = self::getVoltage($para1_bin);
-            $data = [];
+            $result_data = [];
             for ($i = 0 ;$i < 6;$i++) {
                 $position_hex = substr($position_info, $i * 6, 6);
                 $front_data = substr($position_hex, 0, 4);
                 $end_data = substr($position_hex, 4, 2);
                 $front_bin = base_convert($front_data, 16, 2);
                 $end_bin = base_convert($end_data, 16, 2);
-                $data[] = [
+                $result_data[] = [
                     'trigger_id' => self::getTriggerId($front_bin),
                     'wire_id'    => bindec(substr($front_bin, 13, 3)),
                     'xyz'        => self::getXyz($end_bin),
@@ -87,59 +87,59 @@ class Events
             $minute = hexdec(substr($time, 2, 2));
             $second = hexdec(substr($time, 4, 2));
             $new_time = strtotime($hour.':'.$minute.':'.$second);
+            $uid_dec = hexdec($uid);
             $result = [
-                'uid' =>hexdec($uid),
-                'time' => $new_time,
-                'lfUid1' => $data[0]['trigger_id'],
-                'rss1' => $data[0]['rss'],
-                'lfUid2' => $data[1]['trigger_id'],
-                'rss2' => $data[1]['rss'],
-                'lfUid3' => $data[2]['trigger_id'],
-                'rss3' => $data[2]['rss']
+                'uid'    => $uid_dec,
+                'time'   => $new_time,
+                'lfUid1' => $result_data[0]['trigger_id'],
+                'rss1'   => $result_data[0]['rss'],
+                'lfUid2' => $result_data[1]['trigger_id'],
+                'rss2'   => $result_data[1]['rss'],
+                'lfUid3' => $result_data[2]['trigger_id'],
+                'rss3'   => $result_data[2]['rss']
             ];
+            $_SESSION['interval'] = $result;
             $info = [
                 'sys_time' => date('Y-m-d H:i:s'),
-                'addr' => $_SERVER['REMOTE_ADDR'].':'.$_SERVER['REMOTE_PORT'],
-                'uid' =>hexdec($uid),
-                'time' => $new_time,
-                'para1' => $battery,
-                'para2' => $reset,
-                'para3' => $alert,
-                'para4' => $trap,
-                'para5' => $model,
-                'para6' => $vol,
-                'lfUid1' => $data[0]['trigger_id'],
-                'rss1' => $data[0]['rss'],
-                'lfUid2' => $data[1]['trigger_id'],
-                'rss2' => $data[1]['rss'],
-                'lfUid3' => $data[2]['trigger_id'],
-                'rss3' => $data[2]['rss'],
-                'lfUid4' => $data[3]['trigger_id'],
-                'rss4' => $data[3]['rss'],
-                'lfUid5' => $data[4]['trigger_id'],
-                'rss5' => $data[4]['rss'],
-                'lfUid6' => $data[5]['trigger_id'],
-                'rss6' => $data[5]['rss'],
+                'addr'     => $_SERVER['REMOTE_ADDR'].':'.$_SERVER['REMOTE_PORT'],
+                'uid'      => $uid_dec,
+                'time'     => $new_time,
+                'para1'    => $battery,
+                'para2'    => $reset,
+                'para3'    => $alert,
+                'para4'    => $trap,
+                'para5'    => $model,
+                'para6'    => $vol,
+                'lfUid1'   => $result_data[0]['trigger_id'],
+                'rss1'     => $result_data[0]['rss'],
+                'lfUid2'   => $result_data[1]['trigger_id'],
+                'rss2'     => $result_data[1]['rss'],
+                'lfUid3'   => $result_data[2]['trigger_id'],
+                'rss3'     => $result_data[2]['rss'],
+                'lfUid4'   => $result_data[3]['trigger_id'],
+                'rss4'     => $result_data[3]['rss'],
+                'lfUid5'   => $result_data[4]['trigger_id'],
+                'rss5'     => $result_data[4]['rss'],
+                'lfUid6'   => $result_data[5]['trigger_id'],
+                'rss6'     => $result_data[5]['rss'],
             ];
             self::putCsv($info);
-            $config = require(__DIR__.'/../../config.php');
-            $time_interval =$config['interval'];
+            $config = require __DIR__.'/../../config.php';
+            $time_interval = $config['interval'];
             $url = $config['url'];
             $client = new Client();
             self::$time2 = microtime(true);
-            $diff = self::$time2-self::$time1;
-            if (1000*$diff >= $time_interval){
+            $diff = self::$time2 - self::$time1;
+            if (1000 * $diff >= $time_interval) {
                 self::$time1 = microtime(true);
-                $response = $client->request('POST',$url,[
-                    'json'=>$result
+                $client_info = array_column(array_values(Gateway::getAllClientSessions()), 'interval');
+                $client->request('POST', $url, [
+                    'json'=> $client_info
                 ]);
-                $myfile = fopen(__DIR__."/../../guzzle.log", 'ab');
-                fwrite($myfile,json_decode($response->getBody()->getContents(), true).PHP_EOL);
-                fclose($myfile);
             }
-        }catch (\Throwable $throwable){
-            $myfile = fopen(__DIR__."/../../location.log", 'ab');
-            fwrite($myfile,$throwable->getTraceAsString().PHP_EOL);
+        } catch (\Throwable $throwable) {
+            $myfile = fopen(__DIR__.'/../../location.log', 'ab');
+            fwrite($myfile, $throwable->getTraceAsString().PHP_EOL);
             fclose($myfile);
         }
     }
@@ -158,13 +158,9 @@ class Events
     {
         $triger_id = bindec(substr($bin, 0, 13));
         if ($triger_id < 8) {
-            return '测试数据';
-        } elseif ($triger_id >= 8 && $triger_id <= 8159) {
+            return 0;
+        } elseif ($triger_id >= 8) {
             return $triger_id;
-        } elseif ($triger_id == 8160) {
-            return  '标签在触发区域外';
-        } else {
-            return '特殊控制字符';
         }
     }
 
@@ -194,21 +190,21 @@ class Events
 
     public static function getVoltage($bin)
     {
-        $vol = bindec(substr($bin,5,3));
+        $vol = bindec(substr($bin, 5, 3));
         $status = [
-            '2.00~2.09','2.10~2.19','2.20~2.29','2.30~2.39','2.40~2.49','2.50~2.59','2.60~2.69','2.70~2.79'
+            '2.00~2.09', '2.10~2.19', '2.20~2.29', '2.30~2.39', '2.40~2.49', '2.50~2.59', '2.60~2.69', '2.70~2.79'
         ];
-        if (array_key_exists($vol,$status)){
+        if (array_key_exists($vol, $status)) {
             return $status[$vol];
-        }else{
+        } else {
             return '范围外电压';
         }
     }
 
     public static function putCsv($data)
     {
-        $fp = fopen(__DIR__.'/../../info.csv','ab');
-        fputcsv($fp,$data);
+        $fp = fopen(__DIR__.'/../../info.csv', 'ab');
+        fputcsv($fp, $data);
         fclose($fp);
     }
 }
