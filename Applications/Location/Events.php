@@ -132,10 +132,16 @@ class Events
             $diff = self::$time2 - self::$time1;
             if (1000 * $diff >= $time_interval) {
                 self::$time1 = microtime(true);
-                $client_info = array_column(array_values(Gateway::getAllClientSessions()), 'interval');
+                $all_session = Gateway::getAllClientSessions();
+                $session_values = array_values($all_session);
+                $session_keys = array_keys($all_session);
+                $client_info = array_column($session_values, 'interval');
                 $client->request('POST', $url, [
                     'json'=> $client_info
                 ]);
+                foreach ($session_keys as $key){
+                    Gateway::updateSession($key,[]);
+                }
             }
         } catch (\Throwable $throwable) {
             $myfile = fopen(__DIR__.'/../../location.log', 'ab');
@@ -159,7 +165,9 @@ class Events
         $triger_id = bindec(substr($bin, 0, 13));
         if ($triger_id < 8) {
             return 0;
-        } elseif ($triger_id >= 8) {
+        }
+
+        if ($triger_id >= 8) {
             return $triger_id;
         }
     }
