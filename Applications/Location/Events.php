@@ -42,10 +42,10 @@ class Events
     {
         self::$time1 = microtime(true);
         // 向当前client_id发送数据
-        $str = "{\"code\":\"2000\",\"runMode\":1,\"msg\":{\"Infos\":[{\"State\":0,\"UCount\":1,\"ULoc\":5},{\"State\":0,\"UCount\":1,\"ULoc\":8},{\"State\":0,\"UCount\":1,\"ULoc\":12},{\"State\":2,\"UCount\":1,\"ULoc\":16},{\"State\":1,\"UCount\":1,\"ULoc\":3}]}}";
-        $ret = openssl_encrypt($str,'AES-128-ECB', '0214578654125847');
-        var_dump($ret);
-        Gateway::sendToClient($client_id, $ret);
+//        $str = "{\"code\":\"2000\",\"runMode\":1,\"msg\":{\"Infos\":[{\"State\":0,\"UCount\":1,\"ULoc\":5},{\"State\":0,\"UCount\":1,\"ULoc\":8},{\"State\":0,\"UCount\":1,\"ULoc\":12},{\"State\":2,\"UCount\":1,\"ULoc\":16},{\"State\":1,\"UCount\":1,\"ULoc\":3}]}}";
+//        $ret = openssl_encrypt($str,'AES-128-ECB', '0214578654125847');
+//        var_dump($ret);
+//        Gateway::sendToClient($client_id, $ret);
         // 向所有人发送
         //Gateway::sendToAll("$client_id login\r\n");
     }
@@ -57,9 +57,13 @@ class Events
      */
     public static function onMessage($client_id, $data)
     {
-        $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
-        $ret = preg_replace('/[\x00-\x1F]/','', $ret);
-        $result = json_decode($ret);
+        $str = "{\"code\":\"2000\",\"runMode\":1,\"msg\":{\"Infos\":[{\"State\":1,\"UCount\":1,\"ULoc\":5},{\"State\":1,\"UCount\":1,\"ULoc\":8},{\"State\":1,\"UCount\":1,\"ULoc\":12},{\"State\":2,\"UCount\":1,\"ULoc\":16},{\"State\":1,\"UCount\":1,\"ULoc\":3}]}}";
+        $ret = openssl_encrypt($str,'AES-128-ECB', '0214578654125847');
+        var_dump($ret);
+        Gateway::sendToClient($client_id, $ret);
+//        $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
+//        $ret = preg_replace('/[\x00-\x1F]/','', $ret);
+//        $result = json_decode($ret);
         //$data = $result->head;
         //16进制数据
 //        try {
