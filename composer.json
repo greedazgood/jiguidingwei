@@ -6,6 +6,9 @@
     "require": {
         "workerman/gateway-worker" : ">=3.0.0",
         "guzzlehttp/guzzle": "~6.0",
-      "ext-json": "*"
+      "ext-json": "*",
+      "ext-openssl": "*",
+      "ext-iconv": "*",
+      "ext-mbstring": "*"
     }
 }

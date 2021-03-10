@@ -54,6 +54,9 @@ class Events
      */
     public static function onMessage($client_id, $data)
     {
+        $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
+        $ret = preg_replace('/[\x00-\x1F]/','', $ret);
+        $result = json_decode($ret);
         //16进制数据
         try {
             $hex_data = bin2hex($data);
@@ -158,55 +161,6 @@ class Events
     {
         // 向所有人发送
        //GateWay::sendToAll("$client_id logout\r\n");
-    }
-
-    public static function getTriggerId($bin)
-    {
-        $triger_id = bindec(substr($bin, 0, 13));
-        if ($triger_id < 8) {
-            return 0;
-        }
-
-        if ($triger_id >= 8) {
-            return $triger_id;
-        }
-    }
-
-    public static function getXyz($bin)
-    {
-        $xyz = bindec(substr($bin, 0, 2));
-        if ($xyz == 0) {
-            return '保留';
-        } elseif ($xyz == 1) {
-            return 'x';
-        } elseif ($xyz == 2) {
-            return 'y';
-        } else {
-            return 'z';
-        }
-    }
-
-    public static function getStatus($bin)
-    {
-        $status = bindec(substr($bin, 2, 1));
-        if ($status == 0) {
-            return '正常当前触发器触发';
-        } elseif ($status == 1) {
-            return '上次最后离场的触发器触发';
-        }
-    }
-
-    public static function getVoltage($bin)
-    {
-        $vol = bindec(substr($bin, 5, 3));
-        $status = [
-            '2.00~2.09', '2.10~2.19', '2.20~2.29', '2.30~2.39', '2.40~2.49', '2.50~2.59', '2.60~2.69', '2.70~2.79'
-        ];
-        if (array_key_exists($vol, $status)) {
-            return $status[$vol];
-        } else {
-            return '范围外电压';
-        }
     }
 
     public static function putCsv($data)
