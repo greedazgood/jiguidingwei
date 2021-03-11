@@ -61,25 +61,25 @@ class Events
         var_dump($result);
         try {
             if (isset($result['head'])){
-                Gateway::bindUid($client_id,$result['exInfo']);
-                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=".$result['exInfo'])->row();
+                Gateway::bindUid($client_id,$result['head']['exInfo']);
+                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=".$result['head']['exInfo'])->row();
                 var_dump($if_exist);
                 if ($if_exist){
                     echo '数据存在';
-                    if ($result['runMode'] ==1){
+                    if ($result['head']['runMode'] ==1){
                         //数据一致 发送runMode = 3
                         //数据不一致 发送runMode = 2
                     }
-                    if ($result['runMode'] ==2){
+                    if ($result['head']['runMode'] ==2){
                         //数据一致 发送runMode =3
                         //数据不一致 写入数据库 更新 只有这个情况更新了数据库 会上传数据
                     }
-                    if ($result['runMode'] ==3 ){
+                    if ($result['head']['runMode'] ==3 ){
                         //一致发送runMode = 3
                         //不一致发送runMode = 2
                     }
                 }else{
-                    $data = $result->head;
+                    $data = $result['head'];
                     self::$db->insert('basic_info')->cols($data);
                 }
             }
