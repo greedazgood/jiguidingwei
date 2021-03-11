@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c1f3fbdb923010b823121c3e59e4bb44",
+    "content-hash": "b363260f35dac84e38200b5266eb6dd1",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -644,6 +644,54 @@
             "time": "2021-01-25T03:01:01+00:00"
         },
         {
+            "name": "workerman/mysql",
+            "version": "v1.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/walkor/mysql.git",
+                "reference": "28272aa68f9ea1a482f9bb0cf709d169f772d228"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/walkor/mysql/zipball/28272aa68f9ea1a482f9bb0cf709d169f772d228",
+                "reference": "28272aa68f9ea1a482f9bb0cf709d169f772d228",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "ext-pdo": "*",
+                "ext-pdo_mysql": "*",
+                "php": ">=5.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Workerman\\MySQL\\": "./src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Long-living MySQL connection for daemon.",
+            "homepage": "http://www.workerman.net",
+            "keywords": [
+                "mysql",
+                "pdo",
+                "pdo_mysql"
+            ],
+            "support": {
+                "issues": "https://github.com/walkor/mysql/issues",
+                "source": "https://github.com/walkor/mysql/tree/v1.0.6"
+            },
+            "time": "2019-08-02T10:43:09+00:00"
+        },
+        {
             "name": "workerman/workerman",
             "version": "v4.0.18",
             "source": {
@@ -709,7 +757,12 @@
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "ext-iconv": "*",
+        "ext-mbstring": "*"
+    },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"
 }

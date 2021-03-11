@@ -9,6 +9,7 @@
       "ext-json": "*",
       "ext-openssl": "*",
       "ext-iconv": "*",
-      "ext-mbstring": "*"
+      "ext-mbstring": "*",
+        "workerman/mysql": "^1.0"
     }
 }

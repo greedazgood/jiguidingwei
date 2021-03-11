@@ -21,6 +21,8 @@
 
 use GuzzleHttp\Client;
 use \GatewayWorker\Lib\Gateway;
+use Workerman\MySQL\Connection;
+use Workerman\Worker;
 
 /**
  * 主逻辑
@@ -29,9 +31,12 @@ use \GatewayWorker\Lib\Gateway;
  */
 class Events
 {
-    public static $time1;
-    public static $time2;
+    public static $db = null;
 
+    public static function onWorkerStart($businessWorker)
+    {
+        self::$db = new Connection('127.0.0.1','3306','root','root','location');
+    }
     /**
      * 当客户端连接时触发
      * 如果业务不需此回调可以删除onConnect.
@@ -40,14 +45,7 @@ class Events
      */
     public static function onConnect($client_id)
     {
-        self::$time1 = microtime(true);
-        // 向当前client_id发送数据
-//        $str = "{\"code\":\"2000\",\"runMode\":1,\"msg\":{\"Infos\":[{\"State\":0,\"UCount\":1,\"ULoc\":5},{\"State\":0,\"UCount\":1,\"ULoc\":8},{\"State\":0,\"UCount\":1,\"ULoc\":12},{\"State\":2,\"UCount\":1,\"ULoc\":16},{\"State\":1,\"UCount\":1,\"ULoc\":3}]}}";
-//        $ret = openssl_encrypt($str,'AES-128-ECB', '0214578654125847');
-//        var_dump($ret);
-//        Gateway::sendToClient($client_id, $ret);
-        // 向所有人发送
-        //Gateway::sendToAll("$client_id login\r\n");
+
     }
 
     /**
@@ -57,40 +55,43 @@ class Events
      */
     public static function onMessage($client_id, $data)
     {
-        $str = "{\"code\":\"2000\",\"runMode\":1,\"msg\":{\"Infos\":[{\"State\":1,\"UCount\":1,\"ULoc\":5},{\"State\":1,\"UCount\":1,\"ULoc\":8},{\"State\":1,\"UCount\":1,\"ULoc\":12},{\"State\":2,\"UCount\":1,\"ULoc\":16},{\"State\":1,\"UCount\":1,\"ULoc\":3}]}}";
-        $ret = openssl_encrypt($str,'AES-128-ECB', '0214578654125847');
-        var_dump($ret);
-        Gateway::sendToClient($client_id, $ret);
-//        $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
-//        $ret = preg_replace('/[\x00-\x1F]/','', $ret);
-//        $result = json_decode($ret);
-        //$data = $result->head;
-        //16进制数据
-//        try {
-//            $config = require __DIR__.'/../../config.php';
-//            $time_interval = $config['interval'];
-//            $url = $config['url'];
-//            $client = new Client();
-//            self::$time2 = microtime(true);
-//            $diff = self::$time2 - self::$time1;
-//            if (1000 * $diff >= $time_interval) {
-//                self::$time1 = microtime(true);
-//                $all_session = Gateway::getAllClientSessions();
-//                $session_values = array_values($all_session);
-//                $session_keys = array_keys($all_session);
-//                $client_info = array_column($session_values, 'interval');
-//                $client->request('POST', $url, [
-//                    'json'=> $client_info
-//                ]);
-//                foreach ($session_keys as $key){
-//                    Gateway::updateSession($key,[]);
-//                }
-//            }
-//        } catch (\Throwable $throwable) {
-//            $myfile = fopen(__DIR__.'/../../location.log', 'ab');
-//            fwrite($myfile, $throwable->getTraceAsString().PHP_EOL);
-//            fclose($myfile);
-//        }
+        $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
+        $ret = preg_replace('/[\x00-\x1F]/','', $ret);
+        $result = json_decode($ret,true);
+        var_dump($result);
+        try {
+            if (isset($result['head'])){
+                Gateway::bindUid($client_id,$result['exInfo']);
+                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=".$result['exInfo'])->row();
+                var_dump($if_exist);
+                if ($if_exist){
+                    echo '数据存在';
+                    if ($result['runMode'] ==1){
+                        //数据一致 发送runMode = 3
+                        //数据不一致 发送runMode = 2
+                    }
+                    if ($result['runMode'] ==2){
+                        //数据一致 发送runMode =3
+                        //数据不一致 写入数据库 更新 只有这个情况更新了数据库 会上传数据
+                    }
+                    if ($result['runMode'] ==3 ){
+                        //一致发送runMode = 3
+                        //不一致发送runMode = 2
+                    }
+                }else{
+                    $data = $result->head;
+                    self::$db->insert('basic_info')->cols($data);
+                }
+            }
+            if ($result->code){
+                //需要对应的uid
+                Gateway::sendToUid('uid',$data);
+            }
+        } catch (\Throwable $throwable) {
+            $myfile = fopen(__DIR__.'/../../location.log', 'ab');
+            fwrite($myfile, $throwable->getTraceAsString().PHP_EOL);
+            fclose($myfile);
+        }
     }
 
     /**
@@ -101,12 +102,5 @@ class Events
     {
         // 向所有人发送
        //GateWay::sendToAll("$client_id logout\r\n");
-    }
-
-    public static function putCsv($data)
-    {
-        $fp = fopen(__DIR__.'/../../info.csv', 'ab');
-        fputcsv($fp, $data);
-        fclose($fp);
     }
 }
