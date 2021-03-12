@@ -80,7 +80,8 @@ class Events
                     }
                 }else{
                     $data = $result['head'];
-                    self::$db->insert('basic_info')->cols($data);
+                    self::$db->insert('basic_info')->cols($data)->query();
+                    var_dump(1);
                 }
             }
             if ($result->code){
