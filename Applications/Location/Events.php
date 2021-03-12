@@ -90,7 +90,7 @@ class Events
             }
         } catch (\Throwable $throwable) {
             $myfile = fopen(__DIR__.'/../../location.log', 'ab');
-            fwrite($myfile, $throwable->getTraceAsString().PHP_EOL);
+            fwrite($myfile, $throwable->getMessage().PHP_EOL);
             fclose($myfile);
         }
     }
