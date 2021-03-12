@@ -62,7 +62,7 @@ class Events
         try {
             if (isset($result['head'])){
                 Gateway::bindUid($client_id,$result['head']['exInfo']);
-                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=".$result['head']['exInfo'])->row();
+                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$result['head']['exInfo']."\"")->row();
                 var_dump($if_exist);
                 if ($if_exist){
                     echo '数据存在';
