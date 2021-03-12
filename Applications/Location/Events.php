@@ -84,7 +84,7 @@ class Events
                     var_dump(1);
                 }
             }
-            if ($result->code){
+            if (isset($result['code'])){
                 //需要对应的uid
                 Gateway::sendToUid('uid',$data);
             }
