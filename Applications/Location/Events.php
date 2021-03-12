@@ -80,6 +80,9 @@ class Events
                     }
                 }else{
                     $data = $result['head'];
+                    $data['airSpeed'] = json_encode($data['airSpeed']);
+                    $data['humiture'] = json_encode($data['humiture']);
+                    $data['label_info'] = json_encode($data['label_info']);
                     self::$db->insert('basic_info')->cols($data)->query();
                     var_dump(1);
                 }
