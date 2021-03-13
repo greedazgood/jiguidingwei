@@ -64,24 +64,30 @@ class Events
      */
     public static function onMessage($client_id, $data)
     {
+        var_dump($data);
         $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
         $ret = preg_replace('/[\x00-\x1F]/','', $ret);
         $result = json_decode($ret,true);
         try {
             if (isset($result['head'])){
                 $info = $result['head'];
-                $info['airSpeed'] = json_encode($info['airSpeed']);
+                $info['airSpeed'] = isset($info['airSpeed'])?json_encode($info['airSpeed']):'';
                 $info['humiture'] = json_encode($info['humiture']);
                 $info['label_info'] = json_encode($info['label_info']);
                 Gateway::bindUid($client_id,$result['head']['exInfo']);
                 $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->row();
+                $if_exist['airSpeed'] = isset($if_exist['airSpeed'])?json_decode($info['airSpeed']):'';
+                $if_exist['humiture'] = json_decode($info['airSpeed']);
+                $if_exist['label_info'] = json_decode($info['airSpeed']);
+                $test_data = openssl_encrypt(json_encode($if_exist),'AES-128-ECB', '0214578654125847');
+                var_dump($test_data);
                 $if_same = self::$db->select('*')->from('basic_info')->where("label_info=".$info['label_info'])->row();
                 if ($if_exist){
-                    if ($result['head']['runMode'] ==1){
+                    if ($info['runMode'] ==1){
                         $sentData = $if_same?self::$runMode3:self::$runMode2;//数据一致 发送runMode = 3;数据不一致 发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
                     }
-                    if ($result['head']['runMode'] ==2){
+                    if ($info['runMode'] ==2){
                         if ($if_same){
                             $sentData = self::$runMode3;
                             Gateway::sendToClient($client_id,$sentData);//数据一致 发送runMode =3
@@ -90,7 +96,7 @@ class Events
                             //todo 数据变动需要上传数据
                         }
                     }
-                    if ($result['head']['runMode'] ==3 ){
+                    if ($info['runMode'] ==3 ){
                         $sentData = $if_same ? self::$runMode3:self::$runMode2;//一致发送runMode = 3 不一致发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
                     }
