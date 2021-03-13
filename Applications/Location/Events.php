@@ -32,9 +32,18 @@ use Workerman\Worker;
 class Events
 {
     public static $db = null;
+    public static $runMode1;
+    public static $runMode2;
+    public static $runMode3;
 
     public static function onWorkerStart($businessWorker)
     {
+        $runMode1 = "{\"code\":2000,\"runMode\":1,\"msg\":{}}";
+        $runMode2 = "{\"code\":2000,\"runMode\":2,\"msg\":{}}";
+        $runMode3 = "{\"code\":2000,\"runMode\":3,\"msg\":{}}";
+        self::$runMode1 = openssl_encrypt($runMode1,'AES-128-ECB', '0214578654125847');
+        self::$runMode2 = openssl_encrypt($runMode2,'AES-128-ECB', '0214578654125847');
+        self::$runMode3 = openssl_encrypt($runMode3,'AES-128-ECB', '0214578654125847');
         self::$db = new Connection('127.0.0.1','3306','root','root','location');
     }
     /**
@@ -58,37 +67,41 @@ class Events
         $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
         $ret = preg_replace('/[\x00-\x1F]/','', $ret);
         $result = json_decode($ret,true);
-        var_dump($result);
         try {
             if (isset($result['head'])){
+                $info = $result['head'];
+                $info['airSpeed'] = json_encode($info['airSpeed']);
+                $info['humiture'] = json_encode($info['humiture']);
+                $info['label_info'] = json_encode($info['label_info']);
                 Gateway::bindUid($client_id,$result['head']['exInfo']);
-                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$result['head']['exInfo']."\"")->row();
-                var_dump($if_exist);
+                $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->row();
+                $if_same = self::$db->select('*')->from('basic_info')->where("label_info=".$info['label_info'])->row();
                 if ($if_exist){
-                    echo '数据存在';
                     if ($result['head']['runMode'] ==1){
-                        //数据一致 发送runMode = 3
-                        //数据不一致 发送runMode = 2
+                        $sentData = $if_same?self::$runMode3:self::$runMode2;//数据一致 发送runMode = 3;数据不一致 发送runMode = 2
+                        Gateway::sendToClient($client_id,$sentData);
                     }
                     if ($result['head']['runMode'] ==2){
-                        //数据一致 发送runMode =3
-                        //数据不一致 写入数据库 更新 只有这个情况更新了数据库 会上传数据
+                        if ($if_same){
+                            $sentData = self::$runMode3;
+                            Gateway::sendToClient($client_id,$sentData);//数据一致 发送runMode =3
+                        }else{
+                            self::$db->update('basic_info')->cols($info)->where("exInfo=\"".$info['exInfo']."\"")->query();
+                            //todo 数据变动需要上传数据
+                        }
                     }
                     if ($result['head']['runMode'] ==3 ){
-                        //一致发送runMode = 3
-                        //不一致发送runMode = 2
+                        $sentData = $if_same ? self::$runMode3:self::$runMode2;//一致发送runMode = 3 不一致发送runMode = 2
+                        Gateway::sendToClient($client_id,$sentData);
                     }
                 }else{
-                    $data = $result['head'];
-                    $data['airSpeed'] = json_encode($data['airSpeed']);
-                    $data['humiture'] = json_encode($data['humiture']);
-                    $data['label_info'] = json_encode($data['label_info']);
                     self::$db->insert('basic_info')->cols($data)->query();
-                    var_dump(1);
+                    echo "插入数据".PHP_EOL;
                 }
             }
             if (isset($result['code'])){
                 //需要对应的uid
+                //todo 这里可以需要换到独立的服务中，另外需要主板的标识
                 Gateway::sendToUid('uid',$data);
             }
         } catch (\Throwable $throwable) {
