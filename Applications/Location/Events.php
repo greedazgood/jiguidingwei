@@ -76,6 +76,7 @@ class Events
             if ($uid){
                 $order = self::$db->select('*')->from('order_info')->where("exInfo=\"".$uid."\"")->where('status=0')->row();
                 if ($order){
+                    echo "发送指令";
                     Gateway::sendToCurrentClient($order['order']);
                     self::$db->update('order')->cols(['status'=>1])->where("exInfo=\"".$uid."\"")->where('status=0')->query();
                 }
@@ -108,6 +109,7 @@ class Events
                 //$if_same = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->where("label_info=\"".$info['label_info']."\"")->row();
                 $if_same = $if_exist['label_info'] == $info['label_info']?true:false;
                 if ($if_exist){
+                    echo "runMode:".$info['runMode'].PHP_EOL;
                     if (isset($info['runMode']) && $info['runMode'] ==1){
                         $sentData = $if_same?self::$runMode3:self::$runMode2;//数据一致 发送runMode = 3;数据不一致 发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
@@ -118,9 +120,11 @@ class Events
                             Gateway::sendToClient($client_id,$sentData);//数据一致 发送runMode =3
                         }else{
                             self::$db->update('basic_info')->cols($info)->where("exInfo=\"".$info['exInfo']."\"")->query();
+                            echo "更新数据".PHP_EOL;
                             $config = require __DIR__.'/../../config.php';
                             $url = $config['url'];
                             $client = new Client();
+                            echo "发送到后台数据".json_encode($result).PHP_EOL;
                             $client->request('POST', $url, [
                                 'json'=> $result
                             ]);

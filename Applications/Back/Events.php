@@ -63,6 +63,7 @@ class Events
             $order['order'] = $data;
             $order['status'] = 0;
             self::$db->insert('order_info')->cols($order)->query();
+            echo "接收指令入库";
             $result = [
                 'code'=>1000
             ];
