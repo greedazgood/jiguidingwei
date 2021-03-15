@@ -22,7 +22,7 @@
 use GuzzleHttp\Client;
 use \GatewayWorker\Lib\Gateway;
 use Workerman\MySQL\Connection;
-use Workerman\Worker;
+use Workerman\Timer;
 
 /**
  * 主逻辑
@@ -54,7 +54,33 @@ class Events
      */
     public static function onConnect($client_id)
     {
-
+        $config = require __DIR__.'/../../config.php';
+        $url = $config['url'];
+        $interval = $config['interval'];
+        Timer::add($interval,function ()use($url,$client_id){
+            $uid = Gateway::getUidByClientId($client_id);
+            if ($uid){
+                $client = new Client();
+                $data = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$uid."\"")->row();
+                $data['airSpeed'] = unserialize($data['airSpeed']);
+                $data['drSwitch'] = unserialize($data['drSwitch']);
+                $data['humiture'] = unserialize($data['humiture']);
+                $data['label_info'] = unserialize($data['label_info']);
+                $client->request('POST', $url, [
+                    'json'=> $data
+                ]);
+            }
+        });
+        Timer::add(3,function ($client_id){
+            $uid = Gateway::getUidByClientId($client_id);
+            if ($uid){
+                $order = self::$db->select('*')->from('order')->where("exInfo=\"".$uid."\"")->where('status=0')->row();
+                if ($order){
+                    Gateway::sendToCurrentClient($order['order']);
+                    self::$db->update('order')->cols(['status'=>1])->where("exInfo=\"".$uid."\"")->where('status=0')->query();
+                }
+            }
+        });
     }
 
     /**
@@ -64,51 +90,50 @@ class Events
      */
     public static function onMessage($client_id, $data)
     {
-        var_dump($data);
         $ret = openssl_decrypt($data, 'AES-128-ECB', '0214578654125847',2);
         $ret = preg_replace('/[\x00-\x1F]/','', $ret);
         $result = json_decode($ret,true);
         try {
             if (isset($result['head'])){
                 $info = $result['head'];
-                $info['airSpeed'] = isset($info['airSpeed'])?json_encode($info['airSpeed']):'';
-                $info['humiture'] = json_encode($info['humiture']);
-                $info['label_info'] = json_encode($info['label_info']);
+                $info['board_id'] = $info['id'];
+                unset($info['id']);
+                $info['airSpeed'] = isset($info['airSpeed'])?serialize($info['airSpeed']):NULL;
+                $info['drSwitch'] = isset($info['drSwitch'])?serialize($info['drSwitch']):NULL;
+                $info['humiture'] = serialize($info['humiture']);
+                $info['label_info'] = serialize($info['label_info']);
                 Gateway::bindUid($client_id,$result['head']['exInfo']);
                 $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->row();
-                $if_exist['airSpeed'] = isset($if_exist['airSpeed'])?json_decode($info['airSpeed']):'';
-                $if_exist['humiture'] = json_decode($info['airSpeed']);
-                $if_exist['label_info'] = json_decode($info['airSpeed']);
-                $test_data = openssl_encrypt(json_encode($if_exist),'AES-128-ECB', '0214578654125847');
-                var_dump($test_data);
-                $if_same = self::$db->select('*')->from('basic_info')->where("label_info=".$info['label_info'])->row();
+//                $test_data = openssl_encrypt(json_encode($if_exist),'AES-128-ECB', '0214578654125847');
+                //$if_same = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->where("label_info=\"".$info['label_info']."\"")->row();
+                $if_same = $if_exist['label_info'] == $info['label_info']?true:false;
                 if ($if_exist){
-                    if ($info['runMode'] ==1){
+                    if (isset($info['runMode']) && $info['runMode'] ==1){
                         $sentData = $if_same?self::$runMode3:self::$runMode2;//数据一致 发送runMode = 3;数据不一致 发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
                     }
-                    if ($info['runMode'] ==2){
+                    if (isset($info['runMode']) && $info['runMode'] ==2){
                         if ($if_same){
                             $sentData = self::$runMode3;
                             Gateway::sendToClient($client_id,$sentData);//数据一致 发送runMode =3
                         }else{
                             self::$db->update('basic_info')->cols($info)->where("exInfo=\"".$info['exInfo']."\"")->query();
-                            //todo 数据变动需要上传数据
+                            $config = require __DIR__.'/../../config.php';
+                            $url = $config['url'];
+                            $client = new Client();
+                            $client->request('POST', $url, [
+                                'json'=> $result
+                            ]);
                         }
                     }
-                    if ($info['runMode'] ==3 ){
+                    if (isset($info['runMode']) && $info['runMode'] ==3 ){
                         $sentData = $if_same ? self::$runMode3:self::$runMode2;//一致发送runMode = 3 不一致发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
                     }
                 }else{
-                    self::$db->insert('basic_info')->cols($data)->query();
+                    self::$db->insert('basic_info')->cols($info)->query();
                     echo "插入数据".PHP_EOL;
                 }
-            }
-            if (isset($result['code'])){
-                //需要对应的uid
-                //todo 这里可以需要换到独立的服务中，另外需要主板的标识
-                Gateway::sendToUid('uid',$data);
             }
         } catch (\Throwable $throwable) {
             $myfile = fopen(__DIR__.'/../../location.log', 'ab');
