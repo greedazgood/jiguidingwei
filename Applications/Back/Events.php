@@ -62,7 +62,7 @@ class Events
             $order['exInfo'] = $result['exInfo'];
             $order['order'] = $data;
             $order['status'] = 0;
-            self::$db->insert($order)->cols($order)->query();
+            self::$db->insert('order_info')->cols($order)->query();
             $result = [
                 'code'=>1000
             ];

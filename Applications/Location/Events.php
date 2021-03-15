@@ -71,10 +71,10 @@ class Events
                 ]);
             }
         });
-        Timer::add(3,function ($client_id){
+        Timer::add(3,function ()use($client_id){
             $uid = Gateway::getUidByClientId($client_id);
             if ($uid){
-                $order = self::$db->select('*')->from('order')->where("exInfo=\"".$uid."\"")->where('status=0')->row();
+                $order = self::$db->select('*')->from('order_info')->where("exInfo=\"".$uid."\"")->where('status=0')->row();
                 if ($order){
                     Gateway::sendToCurrentClient($order['order']);
                     self::$db->update('order')->cols(['status'=>1])->where("exInfo=\"".$uid."\"")->where('status=0')->query();
