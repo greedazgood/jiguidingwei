@@ -59,6 +59,7 @@ class Events
         $interval = $config['interval'];
         Timer::add($interval,function ()use($url,$client_id){
             $uid = Gateway::getUidByClientId($client_id);
+            echo "固定数据发送".PHP_EOL;
             if ($uid){
                 $client = new Client();
                 $data = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$uid."\"")->row();
@@ -66,12 +67,14 @@ class Events
                 $data['drSwitch'] = unserialize($data['drSwitch']);
                 $data['humiture'] = unserialize($data['humiture']);
                 $data['label_info'] = unserialize($data['label_info']);
+                $info = openssl_encrypt($data,'AES-128-ECB', '0214578654125847');
                 $client->request('POST', $url, [
-                    'json'=> $data
+                    'body'=> $info
                 ]);
             }
         });
         Timer::add(3,function ()use($client_id){
+            echo "固定命令发送".PHP_EOL;
             $uid = Gateway::getUidByClientId($client_id);
             if ($uid){
                 $order = self::$db->select('*')->from('order_info')->where("exInfo=\"".$uid."\"")->where('status=0')->row();
@@ -126,7 +129,7 @@ class Events
                             $client = new Client();
                             echo "发送到后台数据".json_encode($result).PHP_EOL;
                             $client->request('POST', $url, [
-                                'json'=> $result
+                                'body'=> $data
                             ]);
                         }
                     }
