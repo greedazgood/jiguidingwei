@@ -57,6 +57,7 @@ class Events
         $config = require __DIR__.'/../../config.php';
         $url = $config['url'];
         $interval = $config['interval'];
+        echo "定时".$interval.PHP_EOL;
         Timer::add($interval,function ()use($url,$client_id){
             $uid = Gateway::getUidByClientId($client_id);
             echo "固定数据发送".PHP_EOL;
@@ -67,7 +68,8 @@ class Events
                 $data['drSwitch'] = unserialize($data['drSwitch']);
                 $data['humiture'] = unserialize($data['humiture']);
                 $data['label_info'] = unserialize($data['label_info']);
-                $info = openssl_encrypt($data,'AES-128-ECB', '0214578654125847');
+                $json_data = json_encode($data);
+                $info = openssl_encrypt($json_data,'AES-128-ECB', '0214578654125847');
                 $client->request('POST', $url, [
                     'body'=> $info
                 ]);
