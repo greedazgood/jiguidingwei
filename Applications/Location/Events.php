@@ -68,7 +68,7 @@ class Events
                 $data['drSwitch'] = unserialize($data['drSwitch']);
                 $data['humiture'] = unserialize($data['humiture']);
                 $data['label_info'] = unserialize($data['label_info']);
-                $json_data = json_encode($data);
+                $json_data['head'] = json_encode($data);
                 $info = openssl_encrypt($json_data,'AES-128-ECB', '0214578654125847');
                 $client->request('POST', $url, [
                     'body'=> $info
@@ -110,7 +110,7 @@ class Events
                 $info['label_info'] = serialize($info['label_info']);
                 Gateway::bindUid($client_id,$result['head']['exInfo']);
                 $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->row();
-//                $test_data = openssl_encrypt(json_encode($if_exist),'AES-128-ECB', '0214578654125847');
+                //$test_data = openssl_encrypt(json_encode($if_exist),'AES-128-ECB', '0214578654125847');
                 //$if_same = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->where("label_info=\"".$info['label_info']."\"")->row();
                 $if_same = $if_exist['label_info'] == $info['label_info']?true:false;
                 if ($if_exist){
