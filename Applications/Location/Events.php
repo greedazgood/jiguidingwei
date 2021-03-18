@@ -68,8 +68,8 @@ class Events
                 $data['drSwitch'] = unserialize($data['drSwitch']);
                 $data['humiture'] = unserialize($data['humiture']);
                 $data['label_info'] = unserialize($data['label_info']);
-                $json_data['head'] = json_encode($data);
-                $info = openssl_encrypt($json_data,'AES-128-ECB', '0214578654125847');
+                $json_data['head'] = $data;
+                $info = openssl_encrypt(json_encode($json_data),'AES-128-ECB', '0214578654125847');
                 $client->request('POST', $url, [
                     'body'=> $info
                 ]);
