@@ -60,7 +60,7 @@ class Events
         echo "定时".$interval.PHP_EOL;
         Timer::add($interval,function ()use($url,$client_id){
             $uid = Gateway::getUidByClientId($client_id);
-            echo "固定数据发送".PHP_EOL;
+            //echo "固定数据发送".PHP_EOL;
             if ($uid){
                 $client = new Client();
                 $data = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$uid."\"")->row();
@@ -68,22 +68,28 @@ class Events
                 $data['drSwitch'] = unserialize($data['drSwitch']);
                 $data['humiture'] = unserialize($data['humiture']);
                 $data['label_info'] = unserialize($data['label_info']);
-                $json_data['head'] = $data;
+                $json_data['head'] = [
+                    'sw_v' =>$data['sw_v'],
+                    'index' =>$data['index'],
+                    'time' =>$data['time'],
+                    'id' =>$data['id'],
+                    'uCnt' =>$data['uCnt'],
+                    'labelCnt' =>$data['labelCnt'],
+                    'humCnt' =>$data['humCnt'],
+                    'exInfo' =>$data['exInfo'],
+                    'runMode' =>$data['runMode'],
+                ];
+                $json_data['airSpeed'] = $data['airSpeed'];
+                $json_data['drSwitch'] = $data['drSwitch'];
+                $json_data['humiture'] = $data['humiture'];
+                $json_data['label_info'] = $data['label_info'];
                 $info = openssl_encrypt(json_encode($json_data),'AES-128-ECB', '0214578654125847');
-                $client->request('POST', $url, [
-                    'body'=> $info
-                ]);
-            }
-        });
-        Timer::add(3,function ()use($client_id){
-            echo "固定命令发送".PHP_EOL;
-            $uid = Gateway::getUidByClientId($client_id);
-            if ($uid){
-                $order = self::$db->select('*')->from('order_info')->where("exInfo=\"".$uid."\"")->where('status=0')->row();
-                if ($order){
-                    echo "发送指令";
-                    Gateway::sendToCurrentClient($order['order']);
-                    self::$db->update('order')->cols(['status'=>1])->where("exInfo=\"".$uid."\"")->where('status=0')->query();
+                try{
+                    $client->request('POST', $url, [
+                        'body'=> $info
+                    ]);
+                }catch (\Throwable $throwable){
+                    echo '';
                 }
             }
         });
@@ -100,21 +106,40 @@ class Events
         $ret = preg_replace('/[\x00-\x1F]/','', $ret);
         $result = json_decode($ret,true);
         try {
+            if (isset($result['msg'])){
+                echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%".PHP_EOL;
+                echo "发送灯控指令".PHP_EOL;
+                $board_uid = Gateway::getClientIdByUid($result['exInfo']);
+                $feedback = [
+                    'code'=>1000
+                ];
+                $msg['code'] = 2000;
+                $msg['runMode'] = 1;
+                $msg['msg'] = $result['msg'];
+                $info =  openssl_encrypt(json_encode($feedback),'AES-128-ECB', '0214578654125847');
+                $msg =  openssl_encrypt(json_encode($msg),'AES-128-ECB', '0214578654125847');
+                if (isset($board_uid[0])){
+                    Gateway::sendToClient($board_uid[0],$msg);
+                }
+                Gateway::sendToClient($client_id,$info."\r\n");
+            }
             if (isset($result['head'])){
+                echo '############################################'.PHP_EOL;
                 $info = $result['head'];
+                echo "标签数量：".count($info['label_info']).PHP_EOL;
+                foreach ($info['label_info'] as $k){
+                    echo json_encode($k).PHP_EOL;
+                }
                 $info['board_id'] = $info['id'];
                 unset($info['id']);
-                $info['airSpeed'] = isset($info['airSpeed'])?serialize($info['airSpeed']):NULL;
-                $info['drSwitch'] = isset($info['drSwitch'])?serialize($info['drSwitch']):NULL;
+                $info['airSpeed'] = isset($info['airSpeed'])?serialize($info['airSpeed']):'';
+                $info['drSwitch'] = isset($info['drSwitch'])?serialize($info['drSwitch']):'';
                 $info['humiture'] = serialize($info['humiture']);
                 $info['label_info'] = serialize($info['label_info']);
                 Gateway::bindUid($client_id,$result['head']['exInfo']);
                 $if_exist = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->row();
-                //$test_data = openssl_encrypt(json_encode($if_exist),'AES-128-ECB', '0214578654125847');
-                //$if_same = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$info['exInfo']."\"")->where("label_info=\"".$info['label_info']."\"")->row();
                 $if_same = $if_exist['label_info'] == $info['label_info']?true:false;
                 if ($if_exist){
-                    echo "runMode:".$info['runMode'].PHP_EOL;
                     if (isset($info['runMode']) && $info['runMode'] ==1){
                         $sentData = $if_same?self::$runMode3:self::$runMode2;//数据一致 发送runMode = 3;数据不一致 发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
@@ -125,25 +150,52 @@ class Events
                             Gateway::sendToClient($client_id,$sentData);//数据一致 发送runMode =3
                         }else{
                             self::$db->update('basic_info')->cols($info)->where("exInfo=\"".$info['exInfo']."\"")->query();
-                            echo "更新数据".PHP_EOL;
                             $config = require __DIR__.'/../../config.php';
                             $url = $config['url'];
+                            $fa_data['head'] = [
+                                'sw_v' =>$info['sw_v'],
+                                'index' =>$info['index'],
+                                'time' =>$info['time'],
+                                'id' =>$info['board_id'],
+                                'uCnt' =>$info['uCnt'],
+                                'labelCnt' =>$info['labelCnt'],
+                                'humCnt' =>$info['humCnt'],
+                                'exInfo' =>$info['exInfo'],
+                                'runMode' =>$info['runMode'],
+                            ];
+                            $fa_data['airSpeed'] = unserialize($info['airSpeed']);
+                            $fa_data['drSwitch'] = unserialize($info['drSwitch']);
+                            $fa_data['humiture'] = unserialize($info['humiture']);
+                            $fa_data['label_info'] = unserialize($info['label_info']);
+                            $fa_info = openssl_encrypt(json_encode($fa_data),'AES-128-ECB', '0214578654125847');
                             $client = new Client();
-                            echo "发送到后台数据".json_encode($result).PHP_EOL;
-                            $client->request('POST', $url, [
-                                'body'=> $data
-                            ]);
+                            //echo "发送到后台数据".json_encode($result).PHP_EOL;
+                            try{
+                                $client->request('POST', $url, [
+                                    'body'=> $fa_info
+                                ]);
+                            }catch (\Throwable $throwable){
+                                echo '';
+                            }
+                            //echo "发送轮询指令".PHP_EOL;
+                            $sentData = self::$runMode2;
+                            Gateway::sendToClient($client_id,$sentData);//数据一致 发送runMode =3
                         }
                     }
                     if (isset($info['runMode']) && $info['runMode'] ==3 ){
+                        //echo "runMode = 3".PHP_EOL;
                         $sentData = $if_same ? self::$runMode3:self::$runMode2;//一致发送runMode = 3 不一致发送runMode = 2
                         Gateway::sendToClient($client_id,$sentData);
                     }
                 }else{
-                    self::$db->insert('basic_info')->cols($info)->query();
-                    echo "插入数据".PHP_EOL;
+                    //echo "数据添加".PHP_EOL;
+                    if (isset($info['runMode'])){
+                        self::$db->insert('basic_info')->cols($info)->query();
+                        //echo "插入数据".PHP_EOL;
+                    }
                 }
             }
+
         } catch (\Throwable $throwable) {
             $myfile = fopen(__DIR__.'/../../location.log', 'ab');
             fwrite($myfile, $throwable->getMessage().PHP_EOL);
@@ -158,6 +210,6 @@ class Events
     public static function onClose($client_id)
     {
         // 向所有人发送
-       //GateWay::sendToAll("$client_id logout\r\n");
+        //GateWay::sendToAll("$client_id logout\r\n");
     }
 }

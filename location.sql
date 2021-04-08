@@ -44,16 +44,4 @@ CREATE TABLE `basic_info`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 
--- ----------------------------
--- Table structure for order_info
--- ----------------------------
-DROP TABLE IF EXISTS `order_info`;
-CREATE TABLE `order_info`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `exInfo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `order` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
-  `status` tinyint(1) NULL DEFAULT 0 COMMENT '0未下发 1已下发',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
 SET FOREIGN_KEY_CHECKS = 1;
