@@ -58,41 +58,45 @@ class Events
         $url = $config['url'];
         $interval = $config['interval'];
         echo "定时".$interval.PHP_EOL;
-        Timer::add($interval,function ()use($url,$client_id){
-            $uid = Gateway::getUidByClientId($client_id);
-            //echo "固定数据发送".PHP_EOL;
-            if ($uid){
-                $client = new Client();
-                $data = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$uid."\"")->row();
-                $data['airSpeed'] = unserialize($data['airSpeed']);
-                $data['drSwitch'] = unserialize($data['drSwitch']);
-                $data['humiture'] = unserialize($data['humiture']);
-                $data['label_info'] = unserialize($data['label_info']);
-                $json_data['head'] = [
-                    'sw_v' =>$data['sw_v'],
-                    'index' =>$data['index'],
-                    'time' =>$data['time'],
-                    'id' =>$data['id'],
-                    'uCnt' =>$data['uCnt'],
-                    'labelCnt' =>$data['labelCnt'],
-                    'humCnt' =>$data['humCnt'],
-                    'exInfo' =>$data['exInfo'],
-                    'runMode' =>$data['runMode'],
-                ];
-                $json_data['airSpeed'] = $data['airSpeed'];
-                $json_data['drSwitch'] = $data['drSwitch'];
-                $json_data['humiture'] = $data['humiture'];
-                $json_data['label_info'] = $data['label_info'];
-                $info = openssl_encrypt(json_encode($json_data),'AES-128-ECB', '0214578654125847');
-                try{
-                    $client->request('POST', $url, [
-                        'body'=> $info
-                    ]);
-                }catch (\Throwable $throwable){
-                    echo '';
+        try{
+            Timer::add($interval,function ()use($url,$client_id){
+                $uid = Gateway::getUidByClientId($client_id);
+                //echo "固定数据发送".PHP_EOL;
+                if ($uid){
+                    $client = new Client();
+                    $data = self::$db->select('*')->from('basic_info')->where("exInfo=\"".$uid."\"")->row();
+                    $data['airSpeed'] = unserialize($data['airSpeed']);
+                    $data['drSwitch'] = unserialize($data['drSwitch']);
+                    $data['humiture'] = unserialize($data['humiture']);
+                    $data['label_info'] = unserialize($data['label_info']);
+                    $json_data['head'] = [
+                        'sw_v' =>$data['sw_v'],
+                        'index' =>$data['index'],
+                        'time' =>$data['time'],
+                        'id' =>$data['board_id'],
+                        'uCnt' =>$data['uCnt'],
+                        'labelCnt' =>$data['labelCnt'],
+                        'humCnt' =>$data['humCnt'],
+                        'exInfo' =>$data['exInfo'],
+                        'runMode' =>$data['runMode'],
+                    ];
+                    $json_data['airSpeed'] = $data['airSpeed'];
+                    $json_data['drSwitch'] = $data['drSwitch'];
+                    $json_data['humiture'] = $data['humiture'];
+                    $json_data['label_info'] = $data['label_info'];
+                    $info = openssl_encrypt(json_encode($json_data),'AES-128-ECB', '0214578654125847');
+                    try{
+                        $client->request('POST', $url, [
+                            'body'=> $info
+                        ]);
+                    }catch (\Throwable $throwable){
+                        echo '';
+                    }
                 }
-            }
-        });
+            });
+        }catch (\Throwable $throwable){
+            echo $throwable->getMessage();
+        }
     }
 
     /**
